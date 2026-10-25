@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Reader self-test</title>
+  <style>
+    body { margin: 0; padding: 10px; background: #000; color: #fff; font: 700 20px/1.3 system-ui, sans-serif; }
+    h1 { font-size: 24px; margin: 0 0 8px; color: #ffd400; }
+    .ok { color: #5f5; } .bad { color: #ff6b6b; } .wait { color: #ccc; }
+    p { margin: 4px 0; }
+    iframe { width: 100%; height: 320px; border: 2px solid #fff; background: #fff; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Reader self-test</h1>
+  <p id="vp" class="wait">Screen: …</p>
+  <p id="st" class="wait">Storage: …</p>
+  <div id="imgs"></div>
+  <p>Embed test (should show the original page; grey/blank = blocked):</p>
+  <iframe id="frame" title="Original viewer test" referrerpolicy="no-referrer"></iframe>
+  <p><a href="index.html" style="color:#ffd400">Open the reader</a></p>
+
+  <script src="config.js"></script>
+  <script>
+    const C = window.QURAN_CONFIG;
+    const fill = (t, n) => t.replace("{nnnn}", String(n).padStart(4, "0")).replace("{n}", String(n));
+
+    document.getElementById("vp").textContent =
+      "Screen: " + window.innerWidth + " x " + window.innerHeight + " (glasses should be about 600 x 600)";
+
+    try {
+      localStorage.setItem("t", "1");
+      if (localStorage.getItem("t") !== "1") throw new Error("readback failed");
+      localStorage.removeItem("t");
+      const el = document.getElementById("st"); el.textContent = "Storage: OK (last page can be saved)"; el.className = "ok";
+    } catch (e) {
+      const el = document.getElementById("st"); el.textContent = "Storage: NOT available (page kept in address instead)"; el.className = "bad";
+    }
+
+    [1, 2, 300, C.totalPages].forEach((n) => {
+      const p = document.createElement("p");
+      p.className = "wait";
+      p.textContent = "Page image " + n + ": loading…";
+      document.getElementById("imgs").appendChild(p);
+      let k = 0;
+      (function next() {
+        if (k >= C.imageUrls.length) { p.className = "bad"; p.textContent = "Page image " + n + ": FAILED to load"; return; }
+        const url = C.imageUrls[k++];
+        const ext = url.split(".").pop();
+        const i = new Image();
+        i.referrerPolicy = "no-referrer";
+        i.onload = () => { p.className = "ok"; p.textContent = "Page image " + n + ": OK ." + ext + " (" + i.naturalWidth + " x " + i.naturalHeight + ")"; };
+        i.onerror = next;
+        i.src = fill(url, n);
+      })();
+    });
+
+    document.getElementById("frame").src = fill(C.viewerUrl, 2);
+  </script>
+</body>
+</html>

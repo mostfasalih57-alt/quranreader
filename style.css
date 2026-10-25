@@ -1,0 +1,183 @@
+/* Quran Reader – high-contrast layout for a 600 x 600 additive display.
+   On such displays black is "transparent", so the UI is white/yellow on pure black. */
+
+:root {
+  --bg: #000;
+  --fg: #fff;
+  --accent: #ffd400;
+  --bar-h: 62px;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font: 700 20px/1.25 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+#top {
+  flex: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 10px;
+  min-height: 34px;
+  font-size: 22px;
+}
+#zoomLabel { color: var(--accent); }
+
+#stageWrap { position: relative; flex: 1; min-height: 0; }
+
+/* The stage is the single scroll owner. Zooming just makes the image bigger inside it. */
+#stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  overflow: auto;
+  scrollbar-width: none;
+  background: var(--bg);
+  border: 2px solid #444;
+  border-radius: 10px;
+}
+#stage::-webkit-scrollbar { display: none; }
+#stage:focus { outline: 4px solid var(--accent); outline-offset: -4px; }
+
+#pageImg {
+  display: block;
+  flex: none;
+  margin: auto;       /* centres when small, scrolls from the edge when zoomed */
+  max-width: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+/* Invert so the page is light text on black (suits additive displays). */
+body.night #pageImg { filter: invert(1) hue-rotate(180deg); }
+
+#embed {
+  flex: none;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #fff;
+}
+
+/* Loading / error message */
+#status {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  text-align: center;
+  background: rgba(0, 0, 0, .94);
+  border-radius: 10px;
+}
+#status p { margin: 0; font-size: 22px; }
+#status.error p { color: var(--accent); }
+#statusActions { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 360px; }
+
+.spinner {
+  width: 44px; height: 44px;
+  border: 6px solid #555;
+  border-top-color: var(--fg);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+#status.error .spinner { display: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 4s; } }
+
+/* Buttons – big, bordered, and a very obvious focus state for the glasses' focus ring. */
+button {
+  font: inherit;
+  color: var(--fg);
+  background: #111;
+  border: 3px solid var(--fg);
+  border-radius: 14px;
+  min-height: 52px;
+  min-width: 48px;
+  padding: 0 6px;
+  cursor: pointer;
+}
+button:focus,
+button:focus-visible {
+  outline: 5px solid var(--accent);
+  outline-offset: 2px;
+  background: var(--fg);
+  color: #000;
+}
+button.primary { border-color: var(--accent); }
+button[aria-disabled="true"] { opacity: .35; }
+
+.row {
+  flex: none;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 6px;
+  padding: 6px;
+}
+#bar { min-height: var(--bar-h); }
+#bar button { font-size: 19px; }
+#panBar button { font-size: 24px; }
+
+/* Original-viewer mode uses the site's own controls, so hide our zoom/pan. */
+body[data-mode="embed"] .zoomOnly,
+body[data-mode="embed"] #panBar { display: none; }
+body[data-mode="embed"] #bar { grid-auto-flow: column; }
+
+/* Page jump / options panel */
+#panel {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 10px;
+  overflow: auto;
+  background: var(--bg);
+}
+#panel h2 { margin: 0; font-size: 26px; color: var(--accent); }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field .value {
+  font-size: 40px;
+  text-align: center;
+  min-height: 62px;
+  line-height: 56px;
+  border: 3px solid #666;
+  border-radius: 14px;
+}
+.field input {
+  font: inherit;
+  font-size: 30px;
+  text-align: center;
+  color: var(--fg);
+  background: #000;
+  border: 3px solid var(--fg);
+  border-radius: 14px;
+  min-height: 56px;
+}
+.field input:focus { outline: 5px solid var(--accent); outline-offset: 2px; }
+.row.six, .row.two { padding: 0; }
+#jumpMsg { margin: 0; min-height: 24px; color: var(--accent); font-size: 18px; }
+.note { margin: 0; font-size: 16px; font-weight: 500; color: #ccc; }
